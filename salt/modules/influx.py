@@ -46,7 +46,7 @@ def __virtual__():
     '''
     if HAS_INFLUXDB:
         return __virtualname__
-    return False
+    return (False, 'The influx execution module cannot be loaded: influxdb library not available.')
 
 
 def _client(user=None, password=None, host=None, port=None):
@@ -221,7 +221,7 @@ def user_list(database=None, user=None, password=None, host=None, port=None):
     client = _client(user=user, password=password, host=host, port=port)
     if database:
         client.switch_database(database)
-        return client.get_database_users()
+        return client.get_list_users()
     return client.get_list_cluster_admins()
 
 

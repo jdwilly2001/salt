@@ -81,9 +81,9 @@ def __virtual__():
     # which was added in boto 2.8.0
     # https://github.com/boto/boto/commit/33ac26b416fbb48a60602542b4ce15dcc7029f12
     if not HAS_BOTO:
-        return False
+        return (False, "The boto_ec2 module cannot be loaded: boto library not found")
     elif _LooseVersion(boto.__version__) < _LooseVersion(required_boto_version):
-        return False
+        return (False, "The boto_ec2 module cannot be loaded: boto library version incorrect ")
     return True
 
 
@@ -655,7 +655,7 @@ def run(image_id, name=None, tags=None, key_name=None, security_groups=None,
         additional_info=None, tenancy=None, instance_profile_arn=None,
         instance_profile_name=None, ebs_optimized=None,
         network_interface_id=None, network_interface_name=None,
-        region=None, key=None, keyid=None, profile=None):
+        region=None, key=None, keyid=None, profile=None, network_interfaces=None):
     #TODO: support multi-instance reservations
     '''
     Create and start an EC2 instance.

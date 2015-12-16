@@ -104,6 +104,8 @@ def _uptodate(ret, target, comments=None):
         # Shouldn't be making any changes if the repo was up to date, but
         # report on them so we are alerted to potential problems with our
         # logic.
+        if isinstance(comments, list):
+            comments = '\n'.join(comments)
         ret['comment'] += '\n\nChanges made: ' + comments
     return ret
 
@@ -1146,7 +1148,7 @@ def latest(name,
                 if submodules:
                     __salt__['git.submodule'](target,
                                               'update',
-                                              opts=['--recursive', '--init'],
+                                              opts=['--init', '--recursive'],
                                               user=user,
                                               identity=identity)
             elif bare:
@@ -1405,7 +1407,7 @@ def latest(name,
             if submodules and remote_rev:
                 __salt__['git.submodule'](target,
                                           'update',
-                                          opts=['--recursive', '--init'],
+                                          opts=['--init', '--recursive'],
                                           user=user,
                                           identity=identity)
 
