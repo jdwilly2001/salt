@@ -44,6 +44,7 @@ from salt.log.handlers import (TemporaryLoggingHandler,
                                SysLogHandler,
                                FileHandler,
                                WatchedFileHandler,
+                               RotatingFileHandler,
                                QueueHandler)
 from salt.log.mixins import LoggingMixInMeta, NewStyleClassMixIn
 
@@ -504,7 +505,7 @@ def setup_console_logger(log_level='error', log_format=None, date_format=None):
 
 
 def setup_logfile_logger(log_path, log_level='error', log_format=None,
-                         date_format=None):
+                         date_format=None, rotation_options=None):
     '''
     Setup the logfile logger
 
@@ -635,7 +636,16 @@ def setup_logfile_logger(log_path, log_level='error', log_format=None,
             # Since salt uses YAML and YAML uses either UTF-8 or UTF-16, if a
             # user is not using plain ASCII, their system should be ready to
             # handle UTF-8.
-            handler = WatchedFileHandler(log_path, mode='a', encoding='utf-8', delay=0)
+            if not rotation_options:
+                 handler = WatchedFileHandler(log_path, mode='a', encoding='utf-8', delay=0)
+
+            else:
+                 max_bytes = rotation_options.get('max_bytes')
+                 backup_count = rotation_options.get('backup_count')
+
+                 handler = RotatingFileHandler(log_path, mode='a', encoding='utf-8', delay=0, maxBytes=max_bytes, backupCount=backup_count)
+                 
+            
         except (IOError, OSError):
             logging.getLogger(__name__).warning(
                 'Failed to open log file, do you have permission to write to '

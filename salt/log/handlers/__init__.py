@@ -110,6 +110,12 @@ if sys.version_info > (2, 6):
         '''
         Watched file handler which properly handles exc_info on a per handler basis
         '''
+    
+    class RotatingFileHandler(ExxInfoOnLogLevelFormatMixIn, logging.handlers.RotatingFileHandler, NewStyleClassMixIn):
+        '''
+        Rotating file handler that handles exc_info on per handler basis
+        '''
+
 
 
 if sys.version_info < (3, 2):

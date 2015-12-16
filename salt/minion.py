@@ -1068,7 +1068,11 @@ class Minion(MinionBase):
             # We have to re-init the logging system for Windows
             salt.log.setup.setup_console_logger(log_level=opts.get('log_level', 'info'))
             if opts.get('log_file'):
-                salt.log.setup.setup_logfile_logger(opts['log_file'], opts.get('log_level_logfile', 'info'))
+                salt.log.setup.setup_logfile_logger(
+                    opts['log_file'], 
+                    opts.get('log_level_logfile', 'info'),
+                    rotation_options=opts.get('log_file_rotation'))
+
         if not minion_instance:
             minion_instance = cls(opts)
             if not hasattr(minion_instance, 'functions'):
@@ -1264,7 +1268,11 @@ class Minion(MinionBase):
             # We have to re-init the logging system for Windows
             salt.log.setup_console_logger(log_level=opts.get('log_level', 'info'))
             if opts.get('log_file'):
-                salt.log.setup_logfile_logger(opts['log_file'], opts.get('log_level_logfile', 'info'))
+                salt.log.setup_logfile_logger(
+                     opts['log_file'], 
+                     opts.get('log_level_logfile', 'info'), 
+                     rotation_options=get('log_file_rotation'))
+
         if not minion_instance:
             minion_instance = cls(opts)
         ret = {
