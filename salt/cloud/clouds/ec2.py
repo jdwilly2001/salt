@@ -1618,14 +1618,14 @@ def request_instance(vm_=None, call=None):
         userdata = config.get_cloud_config_value(
             'userdata', vm_, __opts__, search_global=False, default=None
         )
+        if userdata is not None:
+            params['UserData'] = base64.b64encode(userdata)
     else:
         log.trace('userdata_file: {0}'.format(userdata_file))
         if os.path.exists(userdata_file):
             with salt.utils.fopen(userdata_file, 'r') as fh_:
                 userdata = fh_.read()
 
-    if userdata is not None:
-        params['UserData'] = base64.b64encode(userdata)
 
     vm_size = config.get_cloud_config_value(
         'size', vm_, __opts__, search_global=False
