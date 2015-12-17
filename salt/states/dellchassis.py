@@ -54,25 +54,25 @@ data in pillar. Here's an example pillar structure:
             idrac_password: saltstack1
             ipmi_over_lan: True
             ip: 172.17.17.1
-            subnet: 255.255.0.0
+            gateway: 255.255.0.0
             netmask: 172.17.255.255
           blade2:
             idrac_password: saltstack1
             ipmi_over_lan: True
             ip: 172.17.17.2
-            subnet: 255.255.0.0
+            gateway: 255.255.0.0
             netmask: 172.17.255.255
           blade3:
             idrac_password: saltstack1
             ipmi_over_lan: True
             ip: 172.17.17.2
-            subnet: 255.255.0.0
+            gateway: 255.255.0.0
             netmask: 172.17.255.255
           blade4:
             idrac_password: saltstack1
             ipmi_over_lan: True
             ip: 172.17.17.2
-            subnet: 255.255.0.0
+            gateway: 255.255.0.0
             netmask: 172.17.255.255
 
         switches:
@@ -140,8 +140,11 @@ pillar stated above:
 # Import python libs
 from __future__ import absolute_import
 import logging
+import os
 
 log = logging.getLogger(__name__)
+
+from salt.exceptions import CommandExecutionError
 
 
 def __virtual__():
@@ -253,7 +256,7 @@ def chassis(name, chassis_name=None, password=None, datacenter=None,
 
         my-dell-chassis:
           dellchassis.chassis:
-            - name: my-dell-chassis
+            - chassis_name: my-dell-chassis
             - location: my-location
             - datacenter: london
             - mode: 2
@@ -375,7 +378,7 @@ def chassis(name, chassis_name=None, password=None, datacenter=None,
         return ret
 
     # Finally, set the necessary configurations on the chassis.
-    name = __salt__[chassis_cmd]('set_chassis_name', name)
+    name = __salt__[chassis_cmd]('set_chassis_name', chassis_name)
     if location:
         location = __salt__[chassis_cmd]('set_chassis_location', location)
     pw_result = True
@@ -544,4 +547,71 @@ def switch(name, ip=None, netmask=None, gateway=None, dhcp=None,
         ret['comment'] = 'There was an error setting the switch {0}.'.format(name)
 
     ret['comment'] = 'Dell chassis switch {0} was updated.'.format(name)
+    return ret
+
+
+def _firmware_update(firmwarefile='', host='',
+                     directory=''):
+    '''
+    Update firmware for a single host
+    '''
+    dest = os.path.join(directory, firmwarefile[7:])
+
+    __salt__['cp.get_file'](firmwarefile, dest)
+
+    username = __pillar__['proxy']['admin_user']
+    password = __pillar__['proxy']['admin_password']
+    __salt__['dracr.update_firmware'](dest,
+                                      host=host,
+                                      admin_username=username,
+                                      admin_password=password)
+
+
+def firmware_update(hosts=None, directory=''):
+    '''
+        State to update the firmware on host
+        using the ``racadm`` command
+
+        firmwarefile
+            filename (string) starting with ``salt://``
+        host
+            string representing the hostname
+            supplied to the ``racadm`` command
+        directory
+            Directory name where firmwarefile
+            will be downloaded
+
+    .. code-block:: yaml
+
+        dell-chassis-firmware-update:
+          dellchassis.firmware_update:
+            hosts:
+              cmc:
+                salt://firmware_cmc.exe
+              server-1:
+                salt://firmware.exe
+            directory: /opt/firmwares
+    '''
+    ret = {}
+    ret.changes = {}
+    success = True
+    for host, firmwarefile in hosts:
+        try:
+            _firmware_update(firmwarefile, host, directory)
+            ret['changes'].update({
+                'host': {
+                    'comment': 'Firmware update submitted for {0}'.format(host),
+                    'success': True,
+                }
+            })
+        except CommandExecutionError as err:
+            success = False
+            ret['changes'].update({
+                'host': {
+                    'comment': 'FAILED to update firmware for {0}'.format(host),
+                    'success': False,
+                    'reason': str(err),
+                }
+            })
+    ret['result'] = success
     return ret

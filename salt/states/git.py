@@ -104,7 +104,7 @@ def _uptodate(ret, target, comments=None):
         # Shouldn't be making any changes if the repo was up to date, but
         # report on them so we are alerted to potential problems with our
         # logic.
-        ret['comment'] += '\n\nChanges made: ' + comments
+        ret['comment'] += '\n\nChanges made: ' + str(comments)
     return ret
 
 
@@ -475,6 +475,7 @@ def latest(name,
 
     if bare:
         remote_rev = None
+        remote_rev_type = None
     else:
         if rev == 'HEAD':
             if 'HEAD' in all_remote_refs:
@@ -555,7 +556,7 @@ def latest(name,
             all_local_tags = __salt__['git.list_tags'](target, user=user)
             local_rev, local_branch = _get_local_rev_and_branch(target, user)
 
-            if remote_rev is None and local_rev is not None:
+            if not bare and remote_rev is None and local_rev is not None:
                 return _fail(
                     ret,
                     'Remote repository is empty, cannot update from a '
@@ -1117,7 +1118,7 @@ def latest(name,
                 if submodules:
                     __salt__['git.submodule'](target,
                                               'update',
-                                              opts=['--recursive'],
+                                              opts=['--init', '--recursive'],
                                               user=user,
                                               identity=identity)
             elif bare:
@@ -1376,7 +1377,7 @@ def latest(name,
             if submodules and remote_rev:
                 __salt__['git.submodule'](target,
                                           'update',
-                                          opts=['--recursive'],
+                                          opts=['--init', '--recursive'],
                                           user=user,
                                           identity=identity)
 
